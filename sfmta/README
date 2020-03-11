@@ -1,0 +1,5 @@
+SF Muni Data and Analysis
+  
+Data Collector. Collect all routes into a database
+=============
+collect -o log_sfmta.json -a
