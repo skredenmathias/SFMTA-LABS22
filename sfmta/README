@@ -3,3 +3,5 @@ SF Muni Data and Analysis
 Data Collector. Collect all routes into a database
 =============
 collect -o log_sfmta.json -a
+
+This branch is incomplete. Please see: https://colab.research.google.com/drive/1Q7mtezt4t8Ekeiv9gUc1uQ4olcnjeU5x?usp=sharing for some of my missing work.

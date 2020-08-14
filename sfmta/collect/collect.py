@@ -9,22 +9,25 @@ import logging.config
 import sys
 import os
 from flask import Flask
-from flask_sqlalchemy import SQLAlchemy
+# from flask_sqlalchemy import SQLAlchem
 from restbus import restbus
 import models
 
 app = Flask(__name__)
-app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:////tmp/test.db'
-app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
-db = SQLAlchemy(app)
+# TODO: Set up ENV variable
 
-db.app = app
-db.init_app(app)
+# app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:////tmp/test.db'
+# app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
+# db = SQLAlchemy(app)
+
+# db.app = app
+# db.init_app(app)
 
 INTERVAL = 60
 
-
-def setup_logging(default_path='logging.json', default_level=logging.INFO, env_key='LOG_CFG'):
+# default_level=logging.INFO
+# env_key='LOG_CFG'
+def setup_logging(default_path='logging.json', default_level=logging.info, env_key='LOG_CFG'):
     """Setup logging configuration """
     path = default_path
     value = os.getenv(env_key, None)
@@ -39,6 +42,8 @@ def setup_logging(default_path='logging.json', default_level=logging.INFO, env_k
 
 
 if __name__ == "__main__":
+    models.init_database()
+
     '''Script to read data via the RESTBUS API and save to a database. '''
     parser = argparse.ArgumentParser(description='Read the RestBus API')
     parser.add_argument(
@@ -48,6 +53,10 @@ if __name__ == "__main__":
     parser.add_argument('-a', '--all', dest='all', action='store_true',
                         help='Collect all vehicles', required=False, default=False)
     args = parser.parse_args()
+
+    #models.Location(datetime.now(), "M", 1462, 49,0,221,37.739,-122.47,
+    #                'M____O_F00', 41660,694,11,2020,73,5)
+
     # Create the logging for any type of messages we want to send to a file
     setup_logging(default_path=args.logfile)
     logger = logging.getLogger(__name__)
@@ -55,7 +64,7 @@ if __name__ == "__main__":
     api1 = restbus()
     # Grab either all the locations or for a specific route
     while True:
-        if args.all == True:
+        if args.all:
             vehicles = api1.get_json('vehicles/')
         else:
             vehicles = api1.get_json('routes/{}/vehicles/'.format(args.route))
@@ -66,7 +75,8 @@ if __name__ == "__main__":
                     timedelta(seconds=int(vehicle['secsSinceReport']))
                 # Save the data to the database
                 total_secs = (true_time - true_time.replace(hour=0, minute=0, second=0, microsecond=0)).seconds
-                loc = models.Location(datetime=timenow,
+
+                models.Location(datetime=timenow,
                                rid=vehicle['routeId'], vid=vehicle['id'], secs=int(
                                    vehicle['secsSinceReport']),
                                kph=int(vehicle['kph']), head=int(vehicle['heading']), dir=vehicle['directionId'],
@@ -77,7 +87,5 @@ if __name__ == "__main__":
                                year=timenow.timetuple().tm_year,
                                dow=timenow.weekday() + 1,
                                doy=timenow.timetuple().tm_yday)
-                db.session.add(loc)
-                db.session.commit()
 
         time.sleep(INTERVAL)
